@@ -1,0 +1,35 @@
+# Ignorar entornos virtuales locales
+venv/
+.venv/
+env/
+ENV/
+pyvenv.cfg
+.Python
+include/
+lib/
+share/
+pip-selfcheck.json
+
+# Ignorar archivos de control de versiones y pipelines
+.git/
+.github/
+.gitignore
+.dockerignore
+README.md
+
+# Ignorar configuraciones locales, secretos y entornos de desarrollo
+.env
+key.json
+.vscode/
+.idea/
+
+# Ignorar carpetas de pruebas y caches de Python
+tests/
+**/__pycache__/
+.pytest_cache/
+*.pyc
+
+# Ignorar archivos de almacenamiento locales generados en desarrollo
+src/output/*.json
+src/output/*.db
+src/output/*.sqlite

@@ -1,0 +1,53 @@
+# ============================================================
+# Entornos Virtuales y Dependencias de Python
+# ============================================================
+venv/
+.venv/
+env/
+ENV/
+pyvenv.cfg
+.Python
+include/
+lib/
+share/
+pip-selfcheck.json
+
+# ============================================================
+# Archivos de Configuración Local y Secretos (CRÍTICO)
+# ============================================================
+.env
+.env.local
+.env.*.local
+key.json
+
+# ============================================================
+# Persistencia y Bases de Datos Locales
+# ============================================================
+# Ignora la carpeta output interna o archivos generados en desarrollo
+src/output/*.json
+src/output/*.db
+src/output/*.sqlite
+!src/output/.gitkeep
+
+# ============================================================
+# Cache de Python y Compilación
+# ============================================================
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.cache/
+
+# ============================================================
+# Archivos del Sistema Operativo o IDEs
+# ============================================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.pdf

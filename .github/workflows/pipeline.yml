@@ -1,0 +1,101 @@
+name: Application CI
+
+# Patrón inspirado en pipelines reales de CI/CD para servicios Python
+# desplegados en Cloud Run: push a una rama dispara build + deploy
+# automático, sin pasos manuales. En equipos con múltiples proyectos,
+# esta lógica suele vivir en un workflow reutilizable centralizado
+# (ej. "uses: ORG/repo/.github/workflows/py-cr-pipeline.yaml@main"),
+# para no repetir los mismos pasos en cada repositorio. Aquí se deja
+# autocontenido para que sea reproducible sin depender de
+# infraestructura privada de una organización específica.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ROLLBACK:
+        type: choice
+        description: "Volver a desplegar la imagen anterior"
+        required: false
+        default: "false"
+        options:
+          - "true"
+          - "false"
+
+env:
+  REGION: us-central1
+  REPO_NAME: indicadores-financieros-repo
+  IMAGE_NAME: indicadores-financieros
+  JOB_NAME: indicadores-financieros-job
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.ROLLBACK != 'true' }}
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Autenticación con GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configurar gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configurar Docker para Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build de la imagen
+        run: |
+          docker build -t \
+            ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+
+      - name: Push de la imagen a Artifact Registry
+        run: |
+          docker push \
+            ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Actualizar el Cloud Run Job con la imagen nueva
+        run: |
+          gcloud run jobs update ${{ env.JOB_NAME }} \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --set-env-vars ENV=production,LOG_LEVEL=INFO,STORAGE_BACKEND=sqlite,MAX_RETRIES=3
+
+      # Este proyecto no requiere credenciales en su forma actual (scraping
+      # de contenido público, sin autenticación). Si en el futuro se
+      # necesitara alguna (ej. API key de un servicio de alertas), el
+      # patrón real usado en automatizaciones RPA similares es inyectarla
+      # desde Secret Manager directamente en el deploy, sin que el valor
+      # pase nunca por el código ni por logs de CI:
+      #
+      #   --set-secrets="SENDGRID_API_KEY=sm_indicadores_sendgrid_key:latest"
+      #
+      # El nombre a la izquierda es la variable de entorno que verá el
+      # contenedor; "sm_indicadores_sendgrid_key:latest" es el nombre del
+      # secret en Secret Manager y la versión a usar.
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.ROLLBACK == 'true' }}
+    steps:
+      - name: Autenticación con GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configurar gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Volver a la revisión anterior del Job
+        run: |
+          PREVIOUS_IMAGE=$(gcloud run jobs describe ${{ env.JOB_NAME }} \
+            --region ${{ env.REGION }} \
+            --format="value(spec.template.spec.template.spec.containers[0].image)")
+          echo "Revirtiendo a: $PREVIOUS_IMAGE"
+          gcloud run jobs update ${{ env.JOB_NAME }} \
+            --image "$PREVIOUS_IMAGE" \
+            --region ${{ env.REGION }}
