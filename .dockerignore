@@ -30,6 +30,6 @@ tests/
 *.pyc
 
 # Ignorar archivos de almacenamiento locales generados en desarrollo
-src/output/*.json
-src/output/*.db
-src/output/*.sqlite
+output/*.json
+output/*.db
+output/*.sqlite

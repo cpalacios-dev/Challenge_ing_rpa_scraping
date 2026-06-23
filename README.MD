@@ -38,12 +38,12 @@ proyecto/
 ├───config/
 │       settings.py           # carga centralizada de configuración
 │
+├───output/
+│
 ├───src/
 │   ├───extractor/
 │   │       schemas.py            # contrato de datos (Pydantic + Enums)
 │   │       bcentral_scraper.py   # scraping del Banco Central (Playwright)
-│   │
-│   ├───output/
 │   │
 │   ├───pipeline/
 │   │       logger.py             # logging estructurado
@@ -106,8 +106,8 @@ python main.py
 
 El pipeline imprime logs estructurados en consola y genera (según el backend
 configurado):
-- `src/output/indicadores.json`, o
-- `src/output/indicadores.db` (SQLite)
+- `output/indicadores.json`, o
+- `output/indicadores.db` (SQLite)
 
 Ejemplo de log de una ejecución exitosa:
 
@@ -125,10 +125,10 @@ Ejemplo de log de una ejecución exitosa:
 
 ```bash
 # Si STORAGE_BACKEND=json
-cat src/output/indicadores.json
+cat output/indicadores.json
 
 # Si STORAGE_BACKEND=sqlite
-sqlite3 src/output/indicadores.db "SELECT * FROM indicadores_financieros;"
+sqlite3 output/indicadores.db "SELECT * FROM indicadores_financieros;"
 ```
 
 ---
@@ -143,8 +143,8 @@ sqlite3 src/output/indicadores.db "SELECT * FROM indicadores_financieros;"
 | `TIMEOUT` | `15` | Segundos de espera para que cargue la página |
 | `MAX_RETRIES` | `3` | Reintentos ante timeout de red en la navegación inicial |
 | `STORAGE_BACKEND` | `json` | Motor de persistencia: `json` o `sqlite` |
-| `OUTPUT_FILE` | `src/output/indicadores.json` | Ruta de salida si el backend es JSON |
-| `SQLITE_DB_PATH` | `src/output/indicadores.db` | Ruta de la base de datos si el backend es SQLite |
+| `OUTPUT_FILE` | `output/indicadores.json` | Ruta de salida si el backend es JSON |
+| `SQLITE_DB_PATH` | `output/indicadores.db` | Ruta de la base de datos si el backend es SQLite |
 
 Ver `.env.example` para la plantilla completa comentada.
 

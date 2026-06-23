@@ -49,14 +49,15 @@ class BancoCentralScraper:
                 )
 
                 ultima_excepcion = None
-
+                page = None
                 for intento in range(1, self.max_retries + 1):
-                    
-                    page = context.new_page()
                     try:
+                        if page is not None:
+                            page.close()  # cerramos la página del intento fallido anterior
+                        page = context.new_page()
+
                         logger.info(
-                            f"Intento {intento}/{self.max_retries} "
-                            f"de navegación hacia {self.url}"
+                            f"Intento {intento}/{self.max_retries} de navegación hacia {self.url}"
                         )
 
                         page.goto(
@@ -65,31 +66,20 @@ class BancoCentralScraper:
                             wait_until="domcontentloaded"
                         )
 
-                        logger.info(
-                            f"Navegación exitosa en intento {intento}"
-                        )
-
+                        logger.info(f"Navegación exitosa en intento {intento}")
                         break
 
                     except Exception as e:
                         ultima_excepcion = e
-
-                        logger.warning(
-                            f"Falló intento {intento}/{self.max_retries}: {e}"
-                        )
+                        logger.warning(f"Falló intento {intento}/{self.max_retries}: {e}")
 
                         if intento < self.max_retries:
-
                             backoff = 2 ** intento
-
-                            logger.info(
-                                f"Esperando {backoff} segundos antes de reintentar..."
-                            )
-
+                            logger.info(f"Esperando {backoff} segundos antes de reintentar...")
                             time.sleep(backoff)
-
                         else:
                             raise ultima_excepcion
+
 
                 # Mapeo de indicadores basado directamente en las clases de los párrafos del HTML real
                 targets = [

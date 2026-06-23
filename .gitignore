@@ -24,10 +24,10 @@ key.json
 # Persistencia y Bases de Datos Locales
 # ============================================================
 # Ignora la carpeta output interna o archivos generados en desarrollo
-src/output/*.json
-src/output/*.db
-src/output/*.sqlite
-!src/output/.gitkeep
+output/*.json
+output/*.db
+output/*.sqlite
+!output/.gitkeep
 
 # ============================================================
 # Cache de Python y Compilación
@@ -51,3 +51,4 @@ Thumbs.db
 *.sln
 *.swp
 *.pdf
+*.log
